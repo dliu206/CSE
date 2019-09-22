@@ -1,0 +1,1 @@
+Used AsterixDB, NoSQL, and JSON to run quieries on CSV type formatted data.

@@ -1,0 +1,87 @@
+
+.decl p1(x:PersonType,d:DescriptionType)
+.decl U(x:PersonType,y:PersonType)
+
+.output p1(filename="hw4-1.ans")
+.output p1(IO=stdout)
+
+U(x,y) :- parent_child(x,y).
+U(x,y) :- parent_child(x,w), U(w,y).
+p1(x,d) :- U("Priscilla",x), person(x,d).
+
+.decl p2(x:PersonType, d:DescriptionType, n:number)
+.decl num(x:PersonType, c:number)
+.decl M(maxChildren:number)
+.decl num2(x:PersonType, c:number)
+.decl M2(maxChildren:number)
+.decl Z(x:PersonType, d:DescriptionType, n:number)
+.decl Y(x:PersonType, d:DescriptionType, n:number)
+
+
+.output p2(filename="hw4-2.ans")
+.output p2(IO=stdout)
+
+num(x,c) :- female(x), c = count:{parent_child(x,_)}.
+M(maxChildren) :- maxChildren = max c:{num(_,c)}.
+Z(x,d,n) :- num(x,n), person(x,d), M(n).  
+
+num2(x,c) :- male(x), c = count:{parent_child(x,_)}.
+M2(maxChildren) :- maxChildren = max c:{num2(_,c)}.
+Y(x,d,n) :- num2(x,n), person(x,d), M2(n).
+
+p2(x,d,n) :- Y(x,d,n).
+p2(x,d,n) :- Z(x,d,n).  
+
+.decl p3(x:PersonType, m1:number, m2:number)
+
+.decl parentless(x:PersonType, c:number)
+.decl parentless2(x:PersonType, c:number)
+
+.output p3(filename="hw4-3.ans")
+.output p3(IO=stdout)
+
+// Base Case Gen 0
+parentless(x,c) :- c = 0, !parent_child(_,x), person(x,_).
+// Percolate Up 
+parentless(x,c) :- c = b + 1, parentless(y, b), parent_child(y, x).
+parentless2(x,c) :- person_living(x), parentless(x,c).
+
+p3(x, m1, m2) :- parentless2(x,_), person_living(x), m2 = max c :{parentless2(x,c)}, m1 = min c :{parentless2(x, c)}.
+
+.decl p4(x:PersonType)
+.decl not_living(x:PersonType)
+.decl femaleDesc(x:PersonType, y:PersonType)
+.decl femaleDesc2(x:PersonType, y:PersonType)
+.decl living(c:number)
+.decl U2(x:PersonType, y:PersonType)
+
+.output p4(filename="hw4-4.ans")
+.output p4(IO=stdout)
+
+U2(x,y) :- parent_child(x,y).
+U2(x,y) :- U2(x,z), parent_child(z,y), female(z).
+
+femaleDesc(x,y) :- female(x), U2(x,y).
+// People - living
+not_living(x) :- person(x,_), !person_living(x).
+femaleDesc2(x,y) :- femaleDesc(x,y), !not_living(y).
+living(c) :- c = count:{person_living(_)}.
+
+p4(x) :- living(c), femaleDesc2(x,_), c = count:{femaleDesc2(x,_)}. 
+
+.decl p5(x:PersonType)
+.decl mcaDesc(x:PersonType, y:PersonType)
+.decl not_mca (x:PersonType)
+.decl mca_count(c:number)
+.decl mcaDesc2(x:PersonType, y:PersonType)
+
+
+.output p5(filename="hw4-5.ans")
+.output p5(IO=stdout)
+
+mcaDesc(x,y) :- p4(x), U2(x,y).
+not_mca(x) :- person(x,_), !p4(x).
+mcaDesc2(x,y) :- mcaDesc(x,y), !not_mca(y).
+mca_count(c) :- c = count:{p4(_)}.
+
+p5(x) :- mcaDesc2(x,_),mca_count(c) ,c-1 = count:{mcaDesc2(x,_)}.

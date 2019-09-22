@@ -1,0 +1,1 @@
+Used Azure for exceptionally large queries and ingesting data.

@@ -1,0 +1,7 @@
+
+WITH sub1 AS (SELECT p1, p2 FROM person_living PL INNER JOIN parent_child PC ON (PL.x = PC.p1)),
+     sub2 AS (SELECT PC2.p1 AS p3, PC2.p2 AS p4 FROM parent_child PC2)
+SELECT s3.p1, max(s3.y) as z FROM (SELECT p1, p3, count(*) as y FROM sub1 s1 INNER JOIN sub2 s2 ON (s1.P2 = s2.p3)
+      				 GROUP BY p1, p3) s3
+	GROUP BY p1;
+ 

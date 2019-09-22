@@ -1,0 +1,66 @@
+
+
+  public int compare(Tuple2<String, Integer> x, Tuple2<String, Integer> y) {
+    return Integer.compare(x._2(), y._2());
+  }
+
+
+ 
+// Returns all itinerarys that leave Seattle
+    Dataset<Row> df = spark.read().parquet(dataFile);
+
+    df.createOrReplaceTempView("flights");
+
+    Dataset<Row> r =
+            spark.sql("SELECT DISTINCT X.destcityname FROM FLIGHTS X WHERE X.origincityname = 'Seattle, WA'");
+
+    r.show();
+
+    return r;
+  
+
+// Same query as above but different format
+
+    JavaRDD<Row> d = spark.read().parquet(dataFile).javaRDD();
+
+    JavaRDD<Row> seattle = d.filter(r -> r.get(ORIGIN_CITY_NAME).toString().compareTo("Seattle, WA") == 0)
+            .map(r -> RowFactory.create(r.get(DEST_CITY_NAME))).distinct();
+
+    return seattle;
+
+// Non-cancelled flights
+
+    JavaRDD<Row> d = spark.read().parquet(dataFile).javaRDD();
+
+    JavaPairRDD<Tuple2<String, Integer>, Integer> not_cancelled =
+            d.filter(r -> r.getInt(CANCELLED) == 0).mapToPair(r -> new Tuple2<Tuple2<String, Integer>, Integer>
+                    (new Tuple2<String, Integer>(r.getString(ORIGIN_CITY_NAME), r.getInt(MONTH)), 1)).reduceByKey((v1, v2) -> v1 + v2);
+
+    return not_cancelled;
+ 
+
+// Most number of flights
+
+    JavaRDD<Row> d = spark.read().parquet(dataFile).javaRDD();
+
+    JavaPairRDD<String, Integer> pair = d.map(r -> RowFactory.create(r.get(ORIGIN_CITY_NAME), r.get(DEST_CITY_NAME))).distinct()
+            .mapToPair(r -> new Tuple2<String, Integer>(r.getString(0), 1)).reduceByKey((v1, v2) -> v1 + v2);
+    Tuple2<String, Integer> max_tuple = pair.max(new TupleComparator());
+
+    return max_tuple;
+
+// Average Delay
+
+    JavaRDD<Row> d = spark.read().parquet(dataFile).javaRDD();
+
+
+    JavaPairRDD<String, Tuple2<Integer, Integer>> delay = d.filter(r -> r.get(DEP_DELAY) != null).
+            mapToPair(r -> new Tuple2<String, Tuple2<Integer, Integer>>(r.getString(ORIGIN_CITY_NAME),
+                    new Tuple2<Integer, Integer>(r.getInt(DEP_DELAY), 1)))
+                    .reduceByKey((v1, v2) -> new Tuple2<Integer, Integer>((v1._1() + v2._1()), v2._2() + v1._2()));
+
+    JavaPairRDD<String, Double> result =
+            delay.mapToPair(t -> new Tuple2<String, Double>(t._1(), (t._2()._1() * 1.0) / t._2()._2()));
+
+    return result;
+
