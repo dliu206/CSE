@@ -1,0 +1,127 @@
+# David Liu
+# CSS 390 - Scripting
+# Autumn 2020
+# Midterm - 11/10/2020
+
+# 1. Find all directories descendant from the current directory and rename them to add a .d
+# extension. The directory names may contain spaces, but will not contain any funny punctuation
+# characters (like quote or newline). For a one-point penalty, you may assume the directories are no
+# more than 4-deep.
+
+import os
+
+for root, directories,files in os.walk('.'):
+    for d in directories:
+        filepath = os.path.join(root, d)
+        os.rename(filepath, filepath + ".d")
+
+
+# 2. Identify all files in the current directory that begin with a #! line and verify that
+# its “interpreter” exists. You may assume the file names do not contain any newline, quote or colon
+# characters. Bonus point if your solution correctly handles file-names with spaces.
+# a) [2 points] Report only the names of the missing interpreters.
+# b) [3 points] Report only the names of the scripts that are missing their interpreter.
+# Alternatively, you may combine the two subproblems into a single script (whichever is easier for you).
+
+import os
+
+for root, directories, files in os.walk('.'):
+    for filename in files:
+        filepath = os.path.join(root, filename)
+
+        # All script files
+        if filepath[-3:] == ".sh" or filepath[-4:] == ".awk" or filepath[-3:] == '.py' or filepath[-3:] == ".pl":
+            with open(filepath, encoding='utf-8') as f:
+                lines = f.readlines()  # read
+            f.close()
+
+            interpreter = lines[0].split("#!")
+
+            # we know its a script
+            if len(interpreter) > 1:
+                if len(interpreter[1]) == 0:
+                    print("Script file missing interperter: %s\n" % filepath)
+            else:
+                print("Script file missing interperter: %s\n" % filepath)
+
+        # All other files
+        else:
+            with open(filepath, encoding='utf-8') as f:
+                lines = f.readlines()  # read
+            f.close()
+
+            interpreter = lines[0].split("#!")
+
+            if len(interpreter) > 1:
+                if len(interpreter[1]) == 0:
+                    print("Non-script file missing interperter: %s\n" % filepath)
+            else:
+                print("Non-script file missing interperter: %s\n" % filepath)
+
+
+# 3. A particular analytic program generates error, warning, and info log messages, useful for
+# trouble-shooting. In particular, info messages of the form shown below describe cookies (128-bit
+# numbers printed in hexadecimal) associated with zero or more segments (uppercase letter, number,
+# underscore, number), where a segment is a set of cookies. Although it is related to online advertising,
+# for solving this problem, you do not have to know anything about cookies or segments other than the
+# definitions given above.
+
+# Assuming the log files are stored in a file called log
+f = open("log", "r")
+for line in f:
+    # print(line)
+    delimited = line.split("==>")
+    cookie = delimited[0].split(" ")[6]
+    segments = delimited[1].replace("[", "")
+    segments = segments.replace("]", "")
+    segments = segments.replace(" ", "")
+    segments = segments.replace("\n", "")
+    segmented = segments.split(",")
+
+    # Part A
+    if "D08734_72525" in segmented and "D08734_74065" in segmented:
+        print(cookie)
+        # Part B
+        duplicate = segmented
+        duplicate.remove("D08734_72525")
+        duplicate.remove("D08734_74065")
+        print("Other segments common to that cookie: %s\n" % duplicate)
+
+# 4. A friend of yours who is not very computer-savvy tried to compute the sha1sum (a 20-
+# digit hex number) of each of his 500 audio files, and accidentally (we're not sure how) renamed each
+# file to the value of its checksum. Fortunately, the exiftool utility program displays the embedded
+# metadata of media files.
+
+import exiftool
+import os
+import shutil
+import math
+
+for root, directories, files in os.walk('./data/music'):
+    for filename in files:
+
+
+        filepath = os.path.join(root, filename)
+
+        with exiftool.ExifTool() as et:
+            metadata = et.get_metadata(os.getcwd())
+            if metadata.get_tag("File:FileType", filepath) == "OGG":
+                artistPath = "/media/music/" + metadata.get_tag('Artistsort', filepath)
+
+                # creating directories
+                if not os.path.isdir(artistPath):
+                    os.mkdir(artistPath)
+                albumPath = artistPath + "/" + metadata.get_tag('Album', filepath)
+                if not os.path.isdir(albumPath):
+                    os.mkdir(albumPath)
+                trackNumber = metadata.get_tag('Track Number', filepath)
+
+                # Padding the 0 for track number
+                trackTotal = metadata.get_tag('Track Total', filepath)
+                trackNumber = "0" * (int(math.log10(int(trackTotal))) - int(math.log10(int(trackNumber)))) + trackNumber
+                newFileName = root + trackNumber + "_" + metadata.get_tag('Title', filepath)
+                os.rename(filepath, newFileName)
+                shutil.move(os.path.join(root, newFileName), albumPath + "/" + newFileName)
+
+
+

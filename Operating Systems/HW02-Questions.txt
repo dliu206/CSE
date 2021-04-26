@@ -1,0 +1,7 @@
+n Unix, the first process is called init. All the others are descendants of “init”. The init process spawns a sshd process that detects a new secure ssh requested connection (WKPort 22). Upon a new connection, sshd spawns a login process that then loads a shell on it when a user successfully logs into the system. Now, assume that the user types
+
+  who | grep <uwnetid> | wc –l
+
+Draw a process tree from init to those three commands. Add fork, exec, wait, and pipe system calls between any two processes affecting each other.
+
+Complete following problems from book (Tenth Edition):  3.2, 3.8, 3.10,3.13
